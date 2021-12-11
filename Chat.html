@@ -1,0 +1,117 @@
+<!DOCTYPE html>
+<html>
+<head>
+<title>Mchat</title>
+<style type="text/css">
+*{
+margin:0;
+padding:0;
+box-sizing:border-box;
+}
+.container{
+border:2px solid black;
+width:90%;
+height:70vh;
+margin:50px auto;
+overflow-y:auto;
+}
+.container div{
+max-width:40%;
+border-radius:5px;
+margin:30px;
+font-size:25px;
+display:block;
+padding:10px;
+}
+.left{
+float:left;
+clear:both;
+background-color:rgba(150,150,150,0.5);
+overflow: hidden;
+word-wrap: break-word;
+}
+.right{
+float:right;
+clear:both;
+background-color:rgba(0,150,0,0.2);
+word-wrap: break-word;
+}
+#form_box{
+display:block;
+width:90%;
+margin:auto;
+}
+#text{
+width:80%;
+padding:15px;
+font-size:20px;
+border:2px solid black;
+border-radius:5px;
+margin:15px;
+}
+.btn{
+width:15%;
+padding:10px;
+border:2px solid black;
+border-radius:9px;
+}
+.members{
+max-width:70%;
+margin:15px;
+text-align:center;
+background-color:rgba(150,150,150,0.3);
+font-size:15px;
+font-weight:bold;
+float:left;
+clear:both;
+}
+</style>
+</head>
+<body>
+<div class="container">
+
+</div>
+<form id="form_box">
+<input type="text" id="text" placeholder="Type Here..." autocomplete='off'> 
+<button class="btn">SEND</button>
+</form>
+<script src="http://localhost:8001/socket.io/socket.io.js"></script>
+<script type="text/javascript">
+const socket=io("http://localhost:8001");
+const form=document.getElementById("form_box");
+const massage_input=document.getElementById("text");
+const main_box=document.querySelector(".container");
+const add_massage=(massage,position)=>{
+let massage_element=document.createElement("div");
+massage_element.classList.add(position);
+massage_element.innerHTML=massage;
+main_box.appendChild(massage_element);
+}
+const name=prompt ("Enter your name");
+socket.emit("new-user-joined",name);
+socket.on("user-joined",(usr_name,id)=>{
+add_massage(`${usr_name || id} joined the chat`,"left");
+});
+socket.on("online",(users,id)=>{
+let mss="Online: "
+for(element in users){
+mss+=` ${users[element] || id},`;
+}
+add_massage(mss,"members");
+});
+form.addEventListener("submit",(e)=>{
+e.preventDefault();
+const massage=massage_input.value;
+massage_input.value="";
+add_massage(`You : ${massage}`,"right");
+socket.emit("send",massage);
+});
+socket.on("recive",data=>{
+add_massage(`${data.name}: ${data.massage}`,"left");
+});
+socket.on("leave",leaved_name=>{
+add_massage(`${leaved_name} left the chat`,"left");
+});
+</script>
+</body>
+</html>
